@@ -1,0 +1,60 @@
+SCRIPTDIR="scripts/"
+CONFIGDIR="configs/"
+
+if [ "$1" == "deploy" ]; then
+
+	echo "Deployment mode."
+	MODE="deploy"
+
+else
+	if [ "$1" == "collect" ]; then
+
+		echo "Collection mode."
+		MODE="collect"
+
+	else
+
+		echo "Missing or invalid mode."
+		echo ""
+		echo "Try: "
+		echo ""
+		echo "  $0 deploy    (to deploy configs to live) "
+		echo "  $0 collect   (to collect configs) "
+		echo ""
+
+		exit 1
+
+	fi
+fi
+
+
+if [ ! -f $SCRIPTDIR/config.list ]; then
+	echo "No config.list found!"
+	exit
+fi
+
+arr=(`cat $SCRIPTDIR/config.list`)
+
+
+for i in ${arr[@]}; do
+	CONFIGFILE=`echo $i | cut -d "|" -f 1`
+	eval LOCATIONDIR=`echo $i | cut -d "|" -f 2 | sed 's/~/${HOME}/' `
+
+	if [ -z $CONFIGFILE ] || [ -z $LOCATIONDIR ]; then
+		echo "Incomplete config line"
+	else
+		if [ "$MODE" == "deploy" ]; then
+			echo -n "Deploying $CONFIGFILE to $LOCATIONDIR... "
+			cp "$CONFIGDIR/$CONFIGFILE" "$LOCATIONDIR"
+			echo "done"
+		fi
+
+		if [ "$MODE" == "collect" ]; then
+			echo -n "Collecting $CONFIGFILE from $LOCATIONDIR... "
+			cp "$LOCATIONDIR/$CONFIGFILE" "$CONFIGDIR"
+			echo "done"
+		fi
+	fi
+	
+done
+
